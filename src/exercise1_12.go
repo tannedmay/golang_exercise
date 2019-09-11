@@ -1,13 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/gif"
 	"io"
+	"log"
 	"math"
 	"math/rand"
+	"net/http"
 	"os"
+	"strconv"
 )
 
 var palette = []color.Color{color.Black, color.RGBA{0, 0xff, 0, 0xff}}
@@ -18,12 +22,20 @@ const (
 )
 
 func main() {
-	lissajous(os.Stdout)
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		cycles, err := strconv.Atoi(q.Get("cycles"))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error in converting cycles in int: %s\n", err)
+		}
+		lissajous(w, cycles)
+	}
+	http.HandleFunc("/", handler)
+	log.Fatalln(http.ListenAndServe("localhost:8000", nil))
 }
 
-func lissajous(out io.Writer) {
+func lissajous(out io.Writer, cycles int) {
 	const (
-		cycles  = 5
 		res     = 0.001
 		size    = 100
 		nframes = 64
@@ -35,7 +47,7 @@ func lissajous(out io.Writer) {
 	for i := 0; i < nframes; i++ {
 		rect := image.Rect(0, 0, 2*size+1, 2*size+1)
 		img := image.NewPaletted(rect, palette)
-		for t := 0.0; t < 2*math.Pi*cycles; t += res {
+		for t := 0.0; t < 2*math.Pi*float64(cycles); t += res {
 			x := math.Sin(t)
 			y := math.Sin(t*freq + phase)
 			img.SetColorIndex(size+int(x*size*0.5), size+int(y*size*0.5), blackIndex)

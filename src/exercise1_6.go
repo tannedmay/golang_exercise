@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/gif"
+	"io"
 	"math"
 	"math/rand"
 	"os"
@@ -19,7 +20,7 @@ func intensity() uint8 {
 	return uint8(55 + (rand.Int() % 201))
 }
 
-func lissajous(out *os.File) {
+func lissajous(out io.Writer) {
 	const (
 		cycles  = 5
 		res     = 0.001
